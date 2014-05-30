@@ -1,0 +1,46 @@
+﻿body {
+    margin: 0;
+    padding: 0;
+}
+
+canvas {
+    border: 1px solid black;
+}
+
+.container {
+    background: lightgreen;
+    padding: 20px;
+}
+
+/*.navbar {
+    background: lightgreen;
+    margin-bottom: 0;
+}
+
+footer {
+    text-align: center;
+}*/
+
+.vert70 {
+    margin-top: 70px;
+}
+
+.menu div {
+    /*margin: 4px;*/
+}
+
+#rules li{
+    margin-top: 0.25em;
+}
+
+#title {
+    font-family: 'Courier New';
+}
+
+@media (min-width: 768px) {
+    .form-inline .form-control {
+        display: inline-block;
+        width: auto;
+        vertical-align: middle;
+    }
+}
