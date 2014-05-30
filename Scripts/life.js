@@ -1,26 +1,25 @@
 ﻿
 var getArrPos = function (mousePos, length) { //translates mouse coordinates into position in 2d array
     var arrPos = {};
-    arrPos.x = Math.floor(mousePos.x / length) + 1;
-    arrPos.y = Math.floor(mousePos.y / length) + 1;
+    arrPos.x = Math.floor(mousePos.x / length);
+    arrPos.y = Math.floor(mousePos.y / length);
     return arrPos;
 }
 
 var getGridPos = function (arrPos, length) { //translates position in 2d array into coordinates for top left corner of corresponding cell on canvas.
     var gridPos = {};
-    gridPos.x = (arrPos.x - 1) * length;
-    gridPos.y = (arrPos.y - 1) * length;
+    gridPos.x = (arrPos.x) * length;
+    gridPos.y = (arrPos.y) * length;
     return gridPos;
 }
 
 var writeSquare = function (ctx, fillValue, gridPos, length) {
-    var squareLength = length - 2;
     if (!fillValue) {
         ctx.fillStyle = "black";
-        ctx.fillRect(gridPos.x + 1, gridPos.y + 1, squareLength, squareLength);
+        ctx.fillRect(gridPos.x + 1, gridPos.y + 1, length - 2, length - 2);
     }
     if (fillValue) {
-        ctx.clearRect(gridPos.x + 1, gridPos.y + 1, squareLength, squareLength);
+        ctx.clearRect(gridPos.x + 1, gridPos.y + 1, length - 2, length - 2);
     }
 }
 
@@ -35,7 +34,7 @@ var writeArr = function (isAlive) {
 }
 
 var writeGrid = function (cxt) {
-    for (var i = 0; i < canvasLength; i += (canvasLength/boardLength)) {
+    for (var i = 0; i < canvasLength; i += cellLength) {
         ctx.beginPath();
         ctx.moveTo(i, 0);
         ctx.lineTo(i, canvasLength);
@@ -54,15 +53,23 @@ var getMousePos = function (canvas, evt) {
     };
 }
 
-var initSquares = function (squares) { //changes all squares to false
-
-    for (var x = 0; x < 42; x++) {
-        for (var y = 0; y < 42; y++) {
+var initSquares = function () { //changes all squares to false
+    cycleCount = 0
+    updateCycleCount();
+    for (var x = 0; x < squares.length; x++) {
+        for (var y = 0; y < squares[x].length; y++) {
             squares[x][y] = false;
         }
     }
 }
 
+var writePattern = function () {
+    for (var x = 0; x < squares.length ; x++) {
+        for (var y = 0; y < squares[x].length; y++) {
+            writeSquare(ctx, !squares[x][y], getGridPos({ x: x, y: y }, cellLength), cellLength);
+        }
+    }
+}
 
 function createArray(length) { //creates arrays of given dimension and length
     var arr = new Array(length || 0),
@@ -78,17 +85,50 @@ function createArray(length) { //creates arrays of given dimension and length
 
 var aCycle = function () { //applies the rules of life to the baord, updates the array and canvas
     var arrPos = {};
-    for (var x = 1; x < squares.length - 1 ; x++) {
-        for (var y = 1; y < squares[x].length - 1; y++) {
-            var count = 0;
-            count += squares[x][y - 1];
-            count += squares[x][y + 1];
-            count += squares[x + 1][y + 1];
-            count += squares[x - 1][y + 1];
-            count += squares[x + 1][y - 1];
-            count += squares[x - 1][y - 1];
-            count += squares[x + 1][y];
-            count += squares[x - 1][y];
+
+    cycleCount++;
+    updateCycleCount();
+    for (var x = 0; x < arrayLength; x++) {
+        for (var y = 0; y < arrayLength; y++) {
+            var count = 0,
+                left,
+                right,
+                up,
+                down;
+
+            if (x === 0) {
+                left = arrayLength - 1;
+                right = 1;
+            }
+            else if (x === arrayLength - 1) {
+                left = x - 1
+                right = 0;
+            }
+            else {
+                left = x - 1;
+                right = x + 1;
+            }
+
+            if (y === 0) {
+                up = arrayLength - 1;
+                down = 1;
+            }
+            else if (y === arrayLength - 1) {
+                up = y - 1;
+                down = 0;
+            }
+            else {
+                up = y - 1;
+                down = y + 1;
+            }
+            count += squares[x][up];
+            count += squares[x][down];
+            count += squares[right][down];
+            count += squares[left][down];
+            count += squares[right][up];
+            count += squares[left][up];
+            count += squares[right][y];
+            count += squares[left][y];
             if (count === 3 && squares[x][y] === false) {
                 newSquares[x][y] = true;
                 arrPos.x = x;
@@ -111,8 +151,8 @@ var aCycle = function () { //applies the rules of life to the baord, updates the
             }
         }
     }
-    for (var x = 1; x < squares.length - 1 ; x++) {
-        for (var y = 1; y < squares[x].length - 1; y++) {
+    for (var x = 0; x < squares.length; x++) {
+        for (var y = 0; y < squares[x].length; y++) {
             if (newSquares[x][y] === true) {
                 squares[x][y] = true;
             }
@@ -132,46 +172,84 @@ var runCycle = function (cycles) {//runs a set number of cycles then stops.
                 if (--i) myLoop(i); else {
                     enableCyclesButton();
                 }
-            }, 250)
+            }, 200)
         })(cycles);
     }
 }
 
+var gosperGliderGun = function () {
+    initSquares();
+    //coordinates for glider gun here.
+    squares[22][38] = true;
+    squares[22][39] = true;
+    squares[23][38] = true;
+    squares[23][39] = true;
+    squares[32][38] = true;
+    squares[32][39] = true;
+    squares[32][40] = true;
+    squares[33][37] = true;
+    squares[33][41] = true;
+    squares[34][36] = true;
+    squares[34][42] = true;
+    squares[35][36] = true;
+    squares[35][42] = true;
+    squares[36][39] = true;
+    squares[37][37] = true;
+    squares[37][41] = true;
+    squares[38][38] = true;
+    squares[38][39] = true;
+    squares[38][40] = true;
+    squares[39][39] = true;
+    squares[42][36] = true;
+    squares[42][37] = true;
+    squares[42][38] = true;
+    squares[43][36] = true;
+    squares[43][37] = true;
+    squares[43][38] = true;
+    squares[44][35] = true;
+    squares[44][39] = true;
+    squares[46][34] = true;
+    squares[46][35] = true;
+    squares[46][39] = true;
+    squares[46][40] = true;
+    squares[56][36] = true;
+    squares[56][37] = true;
+    squares[57][36] = true;
+    squares[57][37] = true;
+    writePattern();
+
+}
+
 var lifePattern = function () {//draws the word "LIFE" on the board, sets corresponding cells to alive in array, all others to dead
-    for (var x = 1; x < squares.length - 1 ; x++) {
-        for (var y = 1; y < squares[x].length - 1; y++) {
-            squares[x][y] = false;
-        }
+    initSquares();
+    for (var y = 37; y < 44; y++) { //draw verticle sections of letters in "LIFE"
+        squares[31][y] = true;
+        squares[37][y] = true;
+        squares[40][y] = true;
+        squares[46][y] = true;
     }
-    for (var y = 27; y < 34; y++) { //draw verticle sections of letters in "LIFE"
-        squares[21][y] = true;
-        squares[27][y] = true;
-        squares[30][y] = true;
-        squares[36][y] = true;
+    for (var x = 32; x < 35; x++) {
+        squares[x][43] = true; //draw horiz sect of "L"
     }
-    for (var x = 22; x < 25; x++) {
-        squares[x][33] = true; //draw horiz sect of "L"
+    for (var x = 41; x < 44; x++) { //draw horiz sects of "F"
+        squares[x][37] = true;
+        squares[x][40] = true;
     }
-    for (var x = 31; x < 34; x++) { //draw horiz sects of "F"
-        squares[x][27] = true;
-        squares[x][30] = true;
+    for (var x = 47; x < 50; x++) { //draw horiz sects of "E"
+        squares[x][37] = true;
+        squares[x][40] = true;
+        squares[x][43] = true;
     }
-    for (var x = 37; x < 40; x++) { //draw horiz sects of "E"
-        squares[x][27] = true;
-        squares[x][30] = true;
-        squares[x][33] = true;
-    }
-    for (var x = 1; x < squares.length - 1 ; x++) {
-        for (var y = 1; y < squares[x].length - 1; y++) {
-            writeSquare(ctx, !squares[x][y], getGridPos({ x: x, y: y }, cellLength), cellLength);
-        }
-    }
+    writePattern();
 }
 
 var clearGrid = function () { //all cells set to dead
     var arrPos = {};
-    for (var x = 1; x < squares.length - 1 ; x++) {
-        for (var y = 1; y < squares[x].length - 1; y++) {
+
+    cycleCount = 0;
+    updateCycleCount();
+    for (var x = 0; x < squares.length; x++) {
+        for (var y = 0; y < squares[x].length; y++) {
             if (squares[x][y]) {               
                 arrPos.x = x;
                 arrPos.y = y;
@@ -201,8 +279,12 @@ var play = function () { //cycles run until stop button is pressed
                 enableCyclesButton();
                 enablePlayButton();
             }
-        }, 250)
+        }, 200)
     })(isRunning);
+}
+
+var updateCycleCount = function () {
+    document.getElementById("cycleCount").innerHTML = "Cycle: " + cycleCount
 }
 
 var enableCyclesButton = function () {
@@ -229,12 +311,12 @@ var enablePlayButton = function () {
     playStopButton.classList.add("btn-success");
 }
 
+var cycleCount = 0;
 var cyclesButton = document.getElementById("startButton");
 var playStopButton = document.getElementById("play-stop");
-var canvasLength = 600;
-var boardLength = 60;
-var arrayLength = boardLength + 2;
-var cellLength = canvasLength / boardLength;
+var canvasLength = 800;
+var arrayLength = 80;
+var cellLength = canvasLength / arrayLength;
 var canvas = document.getElementById('myCanvas');
 var ctx = canvas.getContext('2d');
 var squares = createArray(arrayLength, arrayLength);
@@ -253,12 +335,12 @@ window.onload = function () {
         squares[arrPos.x][arrPos.y] = writeArr(squares[arrPos.x][arrPos.y]);
     }, false);
 
-    //document.getElementById("startButton").addEventListener('mousedown', function (evt) {
-    //    var userCycles = document.getElementById("cycles");
-    //    cycles = userCycles.value;
-    //    runCycle(cycles);
-    //    userCycles.value = "";
-    //}, false);
+    document.getElementById("startButton").addEventListener('mousedown', function (evt) {
+        var userCycles = document.getElementById("cycles");
+        cycles = userCycles.value;
+        runCycle(cycles);
+        userCycles.value = "";
+    }, false);
 };
 
 
