@@ -143,23 +143,23 @@ var lifePattern = function () {//draws the word "LIFE" on the board, sets corres
             squares[x][y] = false;
         }
     }
-    for (var y = 37; y < 44; y++) { //draw verticle sections of letters in "LIFE"
-        squares[31][y] = true;
-        squares[37][y] = true;
-        squares[40][y] = true;
-        squares[46][y] = true;
+    for (var y = 27; y < 34; y++) { //draw verticle sections of letters in "LIFE"
+        squares[21][y] = true;
+        squares[27][y] = true;
+        squares[30][y] = true;
+        squares[36][y] = true;
     }
-    for (var x = 32; x < 35; x++) {
-        squares[x][43] = true; //draw horiz sect of "L"
+    for (var x = 22; x < 25; x++) {
+        squares[x][33] = true; //draw horiz sect of "L"
     }
-    for (var x = 41; x < 44; x++) { //draw horiz sects of "F"
-        squares[x][37] = true;
-        squares[x][40] = true;
+    for (var x = 31; x < 34; x++) { //draw horiz sects of "F"
+        squares[x][27] = true;
+        squares[x][30] = true;
     }
-    for (var x = 47; x < 50; x++) { //draw horiz sects of "E"
-        squares[x][37] = true;
-        squares[x][40] = true;
-        squares[x][43] = true;
+    for (var x = 37; x < 40; x++) { //draw horiz sects of "E"
+        squares[x][27] = true;
+        squares[x][30] = true;
+        squares[x][33] = true;
     }
     for (var x = 1; x < squares.length - 1 ; x++) {
         for (var y = 1; y < squares[x].length - 1; y++) {
@@ -231,8 +231,8 @@ var enablePlayButton = function () {
 
 var cyclesButton = document.getElementById("startButton");
 var playStopButton = document.getElementById("play-stop");
-var canvasLength = 800;
-var boardLength = 80;
+var canvasLength = 600;
+var boardLength = 60;
 var arrayLength = boardLength + 2;
 var cellLength = canvasLength / boardLength;
 var canvas = document.getElementById('myCanvas');
