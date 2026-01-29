@@ -1,81 +1,93 @@
-﻿<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Conway's Game of Life</title>
-    <link href="Content/bootstrap.min.css" rel="stylesheet" />
-    <link href="Content/main.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div class="container clearfix">
-        <div class="row">
-            <div class="col-sm-9">
-                <div id="canvas-well" class="well">
-                    <canvas id="myCanvas" width="800" height="800"></canvas>
-                    <br /><span id="cycleCount">Cycle: 0</span>
-                </div>
-            </div>
-            <div class="col-sm-3">
-                <div class="well text-center">
-                    <h3 id="title">Conway's Game of Life</h3>
-                    <div class="panel">
-                        <h4><u>Rules of the game</u></h4>
-                        <ul id="rules" class="text-left">
-                            <li>Any live cell with fewer than two live neighbours dies.</li>
-                            <li>Any live cell with two or three live neighbours lives on to the next generation.</li>
-                            <li>Any live cell with more than three live neighbours dies.</li>
-                            <li>Any dead cell with exactly three live neighbours becomes a live cell.</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="well clearfix">
-                    <label class="sr-only" for="cycles">Cycles:</label>
-                    <input type="number" class="form-control" id="cycles" placeholder="Cycles to run" />
-                    <br />
-                    <div class="col-sm-offset-2 col-sm-8 btn-group-vertical menu">
-                        <div id="startButton" class="btn btn-success">Run cycles <span class="glyphicon glyphicon-repeat"></span></div>
-                        <div class="btn btn-success" id="play-stop" onclick="play();">Play <span class="glyphicon glyphicon-play"></span></div>
-                        <div class="btn btn-success" id="step" onclick="step();">Step <span class="glyphicon glyphicon-step-forward"></span></div>
-                        <div class="btn btn-primary" id="life" onclick="lifePattern();">LIFE <span class="glyphicon glyphicon-pencil"></span></div>
-                        <div class="btn btn-primary" id="life" onclick="gosperGliderGun();">Glider Gun <span class="glyphicon glyphicon-pencil"></span></div>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Conway's Game of Life</h1>
+        </header>
 
-                        
-                        <div class="btn btn-danger" id="clear" onclick="clearGrid();">Clear Grid <span class="glyphicon glyphicon-trash"></span></div>
+        <main class="game-layout">
+            <!-- Canvas Section -->
+            <section class="canvas-section">
+                <div class="canvas-wrapper">
+                    <canvas id="game-canvas" width="800" height="800"></canvas>
+                </div>
+                <div class="game-stats">
+                    <span class="cycle-counter">Cycle: <span id="cycle-count">0</span></span>
+                </div>
+            </section>
+
+            <!-- Controls Section -->
+            <aside class="controls-section">
+                <!-- Rules Panel -->
+                <article class="panel rules-panel">
+                    <h2>Rules of the Game</h2>
+                    <ul class="rules-list">
+                        <li>Any live cell with fewer than two live neighbours dies (underpopulation).</li>
+                        <li>Any live cell with two or three live neighbours lives on.</li>
+                        <li>Any live cell with more than three live neighbours dies (overpopulation).</li>
+                        <li>Any dead cell with exactly three live neighbours becomes alive (reproduction).</li>
+                    </ul>
+                </article>
+
+                <!-- Playback Controls -->
+                <article class="panel controls-panel">
+                    <h2>Controls</h2>
+                    <div class="control-group">
+                        <label for="batch-cycles" class="visually-hidden">Number of cycles</label>
+                        <input type="number" id="batch-cycles" placeholder="Cycles to run" min="1" max="10000">
+                        <button id="btn-run-cycles" class="btn btn-primary">Run Cycles</button>
                     </div>
-                </div>
-                <div class="well clearfix">
-                    <div class="col-sm-offset-2 col-sm-8 btn-group-vertical menu">
-                        <a href="https://github.com/lwalden/life/" target="_blank" class="btn btn-primary">GitHub Repo</a>
-                        <button class="btn btn-primary" data-toggle="modal" data-target="#aboutModal">About</button>
+
+                    <div class="button-group">
+                        <button id="btn-play" class="btn btn-success">Play</button>
+                        <button id="btn-step" class="btn btn-secondary">Step</button>
                     </div>
-                </div>
-            </div>
-        </div>
+
+                    <div class="button-group">
+                        <button id="btn-pattern-life" class="btn btn-accent">LIFE Pattern</button>
+                        <button id="btn-pattern-glider" class="btn btn-accent">Glider Gun</button>
+                    </div>
+
+                    <button id="btn-clear" class="btn btn-danger btn-full">Clear Grid</button>
+                </article>
+
+                <!-- Links Panel -->
+                <article class="panel links-panel">
+                    <a href="https://github.com/lwalden/life/" target="_blank" rel="noopener" class="btn btn-outline">
+                        GitHub Repository
+                    </a>
+                    <button id="btn-about" class="btn btn-outline">About</button>
+                </article>
+            </aside>
+        </main>
     </div>
-    <div class="modal fade" id="aboutModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title" id="myModalLabel">About Conway's Game of Life</h4>
-                </div>
-                <div class="modal-body">
-                    <p>Written by Laurance Walden using HTML Canvas and Javascript.</p>
-                    <p>View more of my work on my <a href="http://lwalden.github.io" target="_blank">Portfolio Page.</a></p>
-                    <br /><br />
-                    <p>Read more about <a href="http://en.wikipedia.org/wiki/Conway's_Game_of_Life" target="_blank">Conway's Game of Life</a> on Wikipedia.</p>
-                    <br /><br />
-                    <p>The board contains 6400 cells. Cells on the edge of the grid are considered connected to cells on the opposite side. This
-                    casues 'gliders' and simlar patterns to wrap around the screen.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                </div>
+
+    <!-- About Modal (Native HTML dialog) -->
+    <dialog id="about-modal" class="modal">
+        <article class="modal-content">
+            <header class="modal-header">
+                <h2>About Conway's Game of Life</h2>
+                <button id="btn-close-modal" class="btn-close" aria-label="Close">&times;</button>
+            </header>
+            <div class="modal-body">
+                <p>Written by Laurance Walden using HTML Canvas and JavaScript.</p>
+                <p>View more work on the <a href="https://lwalden.github.io" target="_blank" rel="noopener">Portfolio Page</a>.</p>
+                <p>Read more about <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life" target="_blank" rel="noopener">Conway's Game of Life</a> on Wikipedia.</p>
+                <p>The board contains 6,400 cells. Cells on the edge wrap around to the opposite side (toroidal grid), allowing gliders and similar patterns to traverse the entire board continuously.</p>
             </div>
-        </div>
-    </div>
-    <script src="Scripts/jquery-1.9.1.min.js"></script>
-    <script src="Scripts/bootstrap.min.js"></script>
-    <script src="Scripts/life.js"></script>
+            <footer class="modal-footer">
+                <button id="btn-modal-close" class="btn btn-secondary">Close</button>
+            </footer>
+        </article>
+    </dialog>
+
+    <script src="js/app.js"></script>
 </body>
 </html>
-
