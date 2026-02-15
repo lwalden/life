@@ -36,7 +36,6 @@ export class GameController {
         this.pinchState = null;
         this.suppressTapAfterGesture = false;
         this.minimapPointerId = null;
-        this.isBatchRunning = false;
         this.minimapCtx = null;
         this.shellUi = null;
         this.sidebarLayoutManager = null;
@@ -62,8 +61,6 @@ export class GameController {
             controlsSection: document.querySelector('.controls-section'),
             minimapCanvas: document.getElementById('minimap-canvas'),
             cycleCount: document.getElementById('cycle-count'),
-            batchCycles: document.getElementById('batch-cycles'),
-            btnRunCycles: document.getElementById('btn-run-cycles'),
             btnPlay: document.getElementById('btn-play'),
             btnStep: document.getElementById('btn-step'),
             btnPatternLife: document.getElementById('btn-pattern-life'),
@@ -96,7 +93,6 @@ export class GameController {
 
         this.elements.btnPlay.addEventListener('click', () => this.togglePlay());
         this.elements.btnStep.addEventListener('click', () => this.step());
-        this.elements.btnRunCycles.addEventListener('click', () => this.runBatchCycles());
 
         this.elements.btnPatternLife.addEventListener('click', () => this.loadPattern('life'));
         this.elements.btnPatternGlider.addEventListener('click', () => this.loadPattern('gosperGliderGun'));
@@ -121,12 +117,6 @@ export class GameController {
         });
 
         document.addEventListener('keydown', (e) => this.handleKeyboard(e));
-
-        this.elements.batchCycles.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.runBatchCycles();
-            }
-        });
 
         if (this.elements.zoomLevel) {
             this.elements.zoomLevel.addEventListener('input', () => {
@@ -536,7 +526,6 @@ export class GameController {
     handleKeyboard(event) {
         if (event.target.tagName === 'INPUT') return;
         const key = event.key.toLowerCase();
-        if (this.isBatchRunning && key !== 'escape') return;
 
         switch (key) {
             case ' ':
@@ -579,7 +568,6 @@ export class GameController {
     }
 
     togglePlay() {
-        if (this.isBatchRunning) return;
         if (this.isPlaying) {
             this.stop();
         } else {
@@ -588,7 +576,6 @@ export class GameController {
     }
 
     play() {
-        if (this.isBatchRunning) return;
         this.isPlaying = true;
         this.updatePlayButton(true);
         this.disableControls(true);
@@ -618,33 +605,6 @@ export class GameController {
         }
 
         this.animationId = requestAnimationFrame((t) => this.animate(t));
-    }
-
-    async runBatchCycles() {
-        if (this.isBatchRunning || this.isPlaying) return;
-
-        const cycles = parseInt(this.elements.batchCycles.value, 10);
-        if (isNaN(cycles) || cycles <= 0) return;
-
-        this.stop();
-        this.isBatchRunning = true;
-        this.disableControls(true, { includePlay: true });
-        this.elements.btnRunCycles.textContent = 'Running...';
-
-        try {
-            for (let i = 0; i < cycles; i++) {
-                this.step({ withDeathFlash: false });
-                if (i % 10 === 0) {
-                    await new Promise((resolve) => setTimeout(resolve, 0));
-                }
-            }
-        } finally {
-            this.isBatchRunning = false;
-            this.elements.btnRunCycles.textContent = 'Run Cycles';
-            this.elements.batchCycles.value = '';
-            this.disableControls(false, { includePlay: true });
-            this.scheduleMinimapRender({ force: true });
-        }
     }
 
     loadPattern(patternName) {
@@ -687,17 +647,11 @@ export class GameController {
         }
     }
 
-    disableControls(disabled, options = {}) {
-        const includePlay = options.includePlay ?? false;
+    disableControls(disabled) {
         this.elements.btnStep.disabled = disabled;
-        this.elements.btnRunCycles.disabled = disabled;
         this.elements.btnPatternLife.disabled = disabled;
         this.elements.btnPatternGlider.disabled = disabled;
         this.elements.btnClear.disabled = disabled;
-        this.elements.batchCycles.disabled = disabled;
-        if (includePlay) {
-            this.elements.btnPlay.disabled = disabled;
-        }
     }
 
     getBoardConfig() {
