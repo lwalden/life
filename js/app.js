@@ -9,7 +9,7 @@ const CONFIG = Object.freeze({
     DEFAULT_WORLD_SIZE: 240,
     WORLD_SIZE_MULTIPLIER: 3,
     DEFAULT_ZOOM_LEVEL: 1,
-    MIN_ZOOM_LEVEL: 0.5,
+    MIN_ZOOM_LEVEL: 0.375,
     MAX_ZOOM_LEVEL: 1,
     PINCH_ZOOM_SMOOTHING: 0.24,
     PINCH_ZOOM_APPLY_STEP: 0.004,
@@ -23,7 +23,7 @@ const CONFIG = Object.freeze({
     MAX_WORLD_SIZE: 2000,
 
     DESKTOP_MIN_CELL_REM: 0.75,
-    TOUCH_MIN_CELL_REM: 1.5,
+    TOUCH_MIN_CELL_REM: 1.125,
 
     ANIMATION_DELAY: 100,
     DEATH_FLASH_MS: 100,
@@ -77,13 +77,56 @@ function getCanvasContentWidth(canvas) {
     return Math.floor(wrapperRect.width - horizontalPadding - horizontalBorder);
 }
 
+function getCanvasSizeFromHeightBudget(canvas, maxCanvasSize) {
+    const wrapper = canvas.closest('.canvas-wrapper');
+    const section = canvas.closest('.canvas-section');
+    const viewportHeight = document.documentElement.clientHeight || window.innerHeight;
+
+    if (!wrapper || !section) return maxCanvasSize;
+
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const sectionRect = section.getBoundingClientRect();
+    const wrapperStyles = window.getComputedStyle(wrapper);
+
+    const verticalPadding =
+        Number.parseFloat(wrapperStyles.paddingTop || '0') +
+        Number.parseFloat(wrapperStyles.paddingBottom || '0');
+    const verticalBorder =
+        Number.parseFloat(wrapperStyles.borderTopWidth || '0') +
+        Number.parseFloat(wrapperStyles.borderBottomWidth || '0');
+
+    const wrapperChromeHeight = verticalPadding + verticalBorder;
+    const topOffsetToWrapper = Math.max(0, wrapperRect.top);
+    const heightBelowWrapper = Math.max(0, sectionRect.bottom - wrapperRect.bottom);
+
+    const maxWrapperHeight = Math.floor(
+        viewportHeight - topOffsetToWrapper - heightBelowWrapper
+    );
+
+    const maxCanvasHeight = Math.floor(maxWrapperHeight - wrapperChromeHeight);
+
+    return clampInteger(
+        maxCanvasHeight,
+        CONFIG.MIN_CANVAS_SIZE,
+        maxCanvasSize,
+        maxCanvasSize
+    );
+}
+
 function getInitialCanvasSize(canvas, maxCanvasSize) {
     const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
     const contentWidth = getCanvasContentWidth(canvas);
     const availableWidth = contentWidth ? Math.min(contentWidth, viewportWidth) : viewportWidth;
+    const widthBoundSize = clampInteger(
+        availableWidth,
+        CONFIG.MIN_CANVAS_SIZE,
+        maxCanvasSize,
+        maxCanvasSize
+    );
+    const heightBoundSize = getCanvasSizeFromHeightBudget(canvas, maxCanvasSize);
 
     return clampInteger(
-        availableWidth,
+        Math.min(widthBoundSize, heightBoundSize),
         CONFIG.MIN_CANVAS_SIZE,
         maxCanvasSize,
         maxCanvasSize
@@ -215,12 +258,15 @@ function parseInitialBoardConfig(canvas) {
 
     const fittedCanvasSize = getInitialCanvasSize(canvas, configuredMaxCanvas);
 
+    const configuredZoomLevel = Number.parseFloat(canvas.dataset.zoomLevel) / 100;
+    const initialZoomLevel = isCoarsePointer() ? 0.5 : configuredZoomLevel;
+
     return createBoardConfig({
         maxCanvasSize: configuredMaxCanvas,
         canvasSize: fittedCanvasSize,
         visibleGridSize: canvas.dataset.gridSize,
         worldSize: canvas.dataset.worldSize,
-        zoomLevel: Number.parseFloat(canvas.dataset.zoomLevel) / 100,
+        zoomLevel: initialZoomLevel,
         baseMinCellSizePx: getBaseMinimumCellSizePx()
     });
 }
@@ -569,6 +615,7 @@ class GameController {
         this.pinchState = null;
         this.suppressTapAfterGesture = false;
         this.minimapPointerId = null;
+        this.mobileMenuOpen = false;
         this.minimapCtx = null;
 
         this.elements = {};
@@ -595,9 +642,14 @@ class GameController {
             btnPatternGlider: document.getElementById('btn-pattern-glider'),
             btnClear: document.getElementById('btn-clear'),
             btnAbout: document.getElementById('btn-about'),
+            btnAboutMobile: document.getElementById('btn-about-mobile'),
             aboutModal: document.getElementById('about-modal'),
             btnCloseModal: document.getElementById('btn-close-modal'),
             btnModalClose: document.getElementById('btn-modal-close'),
+            btnMobileMenu: document.getElementById('btn-mobile-menu'),
+            btnMobileMenuClose: document.getElementById('btn-mobile-menu-close'),
+            mobileSidePanel: document.getElementById('mobile-side-panel'),
+            mobileSideBackdrop: document.getElementById('mobile-side-backdrop'),
             zoomLevel: document.getElementById('zoom-level'),
             zoomLevelValue: document.getElementById('zoom-level-value'),
             boardCellCount: document.getElementById('board-cell-count'),
@@ -621,6 +673,12 @@ class GameController {
         this.elements.btnClear.addEventListener('click', () => this.clearGrid());
 
         this.elements.btnAbout.addEventListener('click', () => this.openModal());
+        if (this.elements.btnAboutMobile) {
+            this.elements.btnAboutMobile.addEventListener('click', () => {
+                this.openModal();
+                this.closeMobileMenu();
+            });
+        }
         this.elements.btnCloseModal.addEventListener('click', () => this.closeModal());
         this.elements.btnModalClose.addEventListener('click', () => this.closeModal());
 
@@ -640,7 +698,7 @@ class GameController {
 
         if (this.elements.zoomLevel) {
             this.elements.zoomLevel.addEventListener('input', () => {
-                const zoomPercent = Number.parseInt(this.elements.zoomLevel.value, 10);
+                const zoomPercent = Number.parseFloat(this.elements.zoomLevel.value);
                 this.setZoomLevel(zoomPercent / 100);
             });
         }
@@ -652,7 +710,47 @@ class GameController {
             this.elements.minimapCanvas.addEventListener('pointercancel', (e) => this.handleMinimapPointerCancel(e));
         }
 
+        if (this.elements.btnMobileMenu) {
+            this.elements.btnMobileMenu.addEventListener('click', () => this.openMobileMenu());
+        }
+        if (this.elements.btnMobileMenuClose) {
+            this.elements.btnMobileMenuClose.addEventListener('click', () => this.closeMobileMenu());
+        }
+        if (this.elements.mobileSideBackdrop) {
+            this.elements.mobileSideBackdrop.addEventListener('click', () => this.closeMobileMenu());
+        }
+
         window.addEventListener('resize', () => this.handleWindowResize());
+    }
+
+    openMobileMenu() {
+        if (!this.elements.mobileSidePanel || !this.elements.btnMobileMenu) return;
+
+        this.mobileMenuOpen = true;
+        this.elements.mobileSidePanel.removeAttribute('inert');
+        this.elements.mobileSidePanel.classList.add('is-open');
+        this.elements.mobileSidePanel.setAttribute('aria-hidden', 'false');
+        this.elements.btnMobileMenu.setAttribute('aria-expanded', 'true');
+        document.body.classList.add('mobile-menu-open');
+
+        if (this.elements.btnMobileMenuClose) {
+            this.elements.btnMobileMenuClose.focus({ preventScroll: true });
+        }
+    }
+
+    closeMobileMenu() {
+        if (!this.elements.mobileSidePanel || !this.elements.btnMobileMenu) return;
+
+        if (this.elements.mobileSidePanel.contains(document.activeElement)) {
+            this.elements.btnMobileMenu.focus({ preventScroll: true });
+        }
+
+        this.mobileMenuOpen = false;
+        this.elements.mobileSidePanel.classList.remove('is-open');
+        this.elements.mobileSidePanel.setAttribute('aria-hidden', 'true');
+        this.elements.mobileSidePanel.setAttribute('inert', '');
+        this.elements.btnMobileMenu.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('mobile-menu-open');
     }
 
     renderWorld() {
@@ -679,7 +777,8 @@ class GameController {
         const pointH = Math.max(1, Math.ceil(scaleY));
 
         ctx.clearRect(0, 0, width, height);
-        ctx.fillStyle = '#111715';
+        // Keep minimap readable while letting the simulation remain visible beneath it.
+        ctx.fillStyle = 'rgba(8, 12, 10, 0.14)';
         ctx.fillRect(0, 0, width, height);
 
         ctx.fillStyle = this.renderer.colors.ALIVE;
@@ -696,22 +795,34 @@ class GameController {
             }
         }
 
+        const viewportX = Math.floor(this.boardConfig.viewportX * scaleX);
+        const viewportY = Math.floor(this.boardConfig.viewportY * scaleY);
+        const viewportWidth = Math.max(1, Math.ceil(this.boardConfig.visibleGridSize * scaleX));
+        const viewportHeight = Math.max(1, Math.ceil(this.boardConfig.visibleGridSize * scaleY));
+
+        ctx.fillStyle = 'rgba(143, 211, 170, 0.1)';
+        ctx.fillRect(viewportX, viewportY, viewportWidth, viewportHeight);
+
         ctx.strokeStyle = '#8fd3aa';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 1.25;
         ctx.strokeRect(
-            Math.floor(this.boardConfig.viewportX * scaleX),
-            Math.floor(this.boardConfig.viewportY * scaleY),
-            Math.max(1, Math.ceil(this.boardConfig.visibleGridSize * scaleX)),
-            Math.max(1, Math.ceil(this.boardConfig.visibleGridSize * scaleY))
+            viewportX,
+            viewportY,
+            viewportWidth,
+            viewportHeight
         );
     }
 
     updateZoomDisplay() {
         if (!this.elements.zoomLevel || !this.elements.zoomLevelValue) return;
 
-        const zoomPercent = Math.round(this.boardConfig.zoomLevel * 100);
-        this.elements.zoomLevel.value = String(zoomPercent);
-        this.elements.zoomLevelValue.textContent = `${zoomPercent}%`;
+        const zoomPercent = this.boardConfig.zoomLevel * 100;
+        const displayValue = Number.isInteger(zoomPercent)
+            ? String(zoomPercent)
+            : zoomPercent.toFixed(1);
+
+        this.elements.zoomLevel.value = displayValue;
+        this.elements.zoomLevelValue.textContent = `${displayValue}%`;
     }
 
     applyViewport(viewportX, viewportY, shouldRender = true) {
@@ -962,6 +1073,10 @@ class GameController {
                 { preserveState: true, keepViewportCenter: true }
             );
         }, 120);
+
+        if (window.innerWidth > 767 && this.mobileMenuOpen) {
+            this.closeMobileMenu();
+        }
     }
 
     clearPendingDeathFlash() {
@@ -1000,6 +1115,7 @@ class GameController {
             case 'escape':
                 if (this.isPlaying) this.stop();
                 this.closeModal();
+                this.closeMobileMenu();
                 break;
         }
     }
@@ -1139,7 +1255,9 @@ class GameController {
     }
 
     closeModal() {
-        this.elements.aboutModal.close();
+        if (this.elements.aboutModal.open) {
+            this.elements.aboutModal.close();
+        }
     }
 
     getBoardConfig() {
