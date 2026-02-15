@@ -61,6 +61,7 @@ export class GameController {
             controlsSection: document.querySelector('.controls-section'),
             minimapCanvas: document.getElementById('minimap-canvas'),
             cycleCount: document.getElementById('cycle-count'),
+            btnStepBack: document.getElementById('btn-step-back'),
             btnPlay: document.getElementById('btn-play'),
             btnStep: document.getElementById('btn-step'),
             btnPatternLife: document.getElementById('btn-pattern-life'),
@@ -90,7 +91,14 @@ export class GameController {
         this.elements.canvas.addEventListener('pointermove', (e) => this.handleCanvasPointerMove(e));
         this.elements.canvas.addEventListener('pointerup', (e) => this.handleCanvasPointerUp(e));
         this.elements.canvas.addEventListener('pointercancel', (e) => this.handleCanvasPointerCancel(e));
+        this.elements.canvas.addEventListener('wheel', (e) => this.handleCanvasWheel(e), { passive: false });
 
+        if (this.elements.btnStepBack) {
+            this.elements.btnStepBack.addEventListener('click', () => {
+                if (this.elements.btnStepBack.disabled) return;
+                this.stepBack();
+            });
+        }
         this.elements.btnPlay.addEventListener('click', () => this.togglePlay());
         this.elements.btnStep.addEventListener('click', () => {
             if (this.elements.btnStep.disabled) return;
@@ -278,6 +286,7 @@ export class GameController {
         if (this.grid.isValidPosition(worldX, worldY)) {
             this.grid.toggleCell(worldX, worldY);
             this.renderWorld();
+            this.updateTransportControls();
         }
     }
 
@@ -430,6 +439,21 @@ export class GameController {
         }
     }
 
+    handleCanvasWheel(event) {
+        if (!Number.isFinite(event.deltaY) || event.deltaY === 0) return;
+
+        event.preventDefault();
+
+        const deltaModeMultiplier = event.deltaMode === 1
+            ? 16
+            : (event.deltaMode === 2 ? 100 : 1);
+        const normalizedDeltaY = event.deltaY * deltaModeMultiplier;
+        const direction = normalizedDeltaY < 0 ? 1 : -1;
+        const nextZoomLevel = this.boardConfig.zoomLevel + (direction * CONFIG.WHEEL_ZOOM_STEP);
+
+        this.setZoomLevel(nextZoomLevel);
+    }
+
     setViewportCenterFromMinimapPointer(event) {
         if (!this.elements.minimapCanvas) return;
 
@@ -553,6 +577,19 @@ export class GameController {
 
     updateCycleDisplay() {
         this.elements.cycleCount.textContent = this.grid.cycleCount;
+        this.updateTransportControls();
+    }
+
+    updateTransportControls() {
+        const transportLocked = this.isPlaying;
+        this.elements.btnStep.disabled = transportLocked;
+
+        if (this.elements.btnStepBack) {
+            const canStepBack = typeof this.grid.canStepBack === 'function'
+                ? this.grid.canStepBack()
+                : this.grid.cycleCount > 0;
+            this.elements.btnStepBack.disabled = transportLocked || !canStepBack;
+        }
     }
 
     step({ withDeathFlash = true } = {}) {
@@ -569,6 +606,21 @@ export class GameController {
             this.renderWorld();
         }
 
+        this.updateCycleDisplay();
+    }
+
+    stepBack() {
+        if (this.isPlaying) return;
+        if (typeof this.grid.stepBack !== 'function') return;
+
+        this.clearPendingDeathFlash();
+        const { didStepBack } = this.grid.stepBack();
+        if (!didStepBack) {
+            this.updateTransportControls();
+            return;
+        }
+
+        this.renderWorld();
         this.updateCycleDisplay();
     }
 
@@ -654,20 +706,23 @@ export class GameController {
     updatePlayButton(playing) {
         const btn = this.elements.btnPlay;
         if (playing) {
-            btn.innerHTML = 'Stop <span class="btn-icon btn-icon-stop" aria-hidden="true"></span>';
+            btn.innerHTML = '<span class="btn-icon btn-icon-stop" aria-hidden="true"></span>';
+            btn.setAttribute('aria-label', 'Stop');
         } else {
-            btn.innerHTML = 'Play <span class="btn-icon btn-icon-play" aria-hidden="true"></span>';
+            btn.innerHTML = '<span class="btn-icon btn-icon-play" aria-hidden="true"></span>';
+            btn.setAttribute('aria-label', 'Play');
         }
 
         this.applyPlayStateClasses(this.elements.btnPlay, playing);
+        this.applyPlayStateClasses(this.elements.btnStepBack, playing);
         this.applyPlayStateClasses(this.elements.btnStep, playing);
     }
 
     disableControls(disabled) {
-        this.elements.btnStep.disabled = disabled;
         this.elements.btnPatternLife.disabled = disabled;
         this.elements.btnPatternGlider.disabled = disabled;
         this.elements.btnClear.disabled = disabled;
+        this.updateTransportControls();
     }
 
     getBoardConfig() {
