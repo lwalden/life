@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Conway's Game of Life</title>
-    <link rel="stylesheet" href="css/styles.css?v=20260215b">
+    <link rel="stylesheet" href="css/styles.css?v=20260215c">
 </head>
 <body>
     <div class="app-container">
@@ -56,12 +56,7 @@
                         <button id="btn-pattern-glider" class="btn btn-accent">Glider Gun</button>
                     </div>
                     
-                    <div class="control-group">
-                        <button id="btn-clear" class="btn btn-danger btn-full">Clear Grid</button>
-                        <label for="batch-cycles" class="visually-hidden">Number of cycles</label>
-                        <input type="number" id="batch-cycles" placeholder="Cycles to run" min="1" max="10000">
-                        <button id="btn-run-cycles" class="btn btn-primary">Run Cycles</button>
-                    </div>
+                    <button id="btn-clear" class="btn btn-danger btn-full controls-clear">Clear Grid</button>
                     <div class="game-stats" aria-live="polite">
                         <span class="cycle-counter">Cycle: <span id="cycle-count">0</span></span>
                     </div>
@@ -139,6 +134,6 @@
         </article>
     </dialog>
 
-    <script type="module" src="js/app.js?v=20260215e"></script>
+    <script type="module" src="js/app.js?v=20260215f"></script>
 </body>
 </html>
