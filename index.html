@@ -9,34 +9,33 @@
 <body>
     <div class="app-container">
         <header class="app-header">
+            <p class="eyebrow">Cellular Automata Simulation</p>
             <h1>Conway's Game of Life</h1>
+            <div class="game-stats" aria-live="polite">
+                <span class="cycle-counter">Cycle: <span id="cycle-count">0</span></span>
+            </div>
         </header>
 
         <main class="game-layout">
-            <!-- Canvas Section -->
-            <section class="canvas-section">
+            <section class="canvas-section" aria-label="Simulation grid">
                 <div class="canvas-wrapper">
-                    <canvas id="game-canvas" width="800" height="800"></canvas>
+                    <canvas
+                        id="game-canvas"
+                        width="800"
+                        height="800"
+                        data-grid-size="80"
+                        data-canvas-size="800"
+                        data-world-size="240"
+                        data-zoom-level="100"
+                    ></canvas>
+                    <div class="minimap-overlay">
+                        <canvas id="minimap-canvas" width="140" height="140" aria-label="World minimap"></canvas>
+                    </div>
                 </div>
-                <div class="game-stats">
-                    <span class="cycle-counter">Cycle: <span id="cycle-count">0</span></span>
-                </div>
+                <p class="canvas-hint">Drag to pan, pinch to zoom, tap cells to toggle. Drag on minimap to jump viewport.</p>
             </section>
 
-            <!-- Controls Section -->
             <aside class="controls-section">
-                <!-- Rules Panel -->
-                <article class="panel rules-panel">
-                    <h2>Rules of the Game</h2>
-                    <ul class="rules-list">
-                        <li>Any live cell with fewer than two live neighbours dies (underpopulation).</li>
-                        <li>Any live cell with two or three live neighbours lives on.</li>
-                        <li>Any live cell with more than three live neighbours dies (overpopulation).</li>
-                        <li>Any dead cell with exactly three live neighbours becomes alive (reproduction).</li>
-                    </ul>
-                </article>
-
-                <!-- Playback Controls -->
                 <article class="panel controls-panel">
                     <h2>Controls</h2>
                     <div class="control-group">
@@ -55,10 +54,27 @@
                         <button id="btn-pattern-glider" class="btn btn-accent">Glider Gun</button>
                     </div>
 
+                    <div class="view-controls">
+                        <label for="zoom-level">Viewport Zoom</label>
+                        <div class="range-row">
+                            <input type="range" id="zoom-level" min="50" max="100" step="5" value="100">
+                            <span id="zoom-level-value">100%</span>
+                        </div>
+                    </div>
+
                     <button id="btn-clear" class="btn btn-danger btn-full">Clear Grid</button>
                 </article>
 
-                <!-- Links Panel -->
+                <article class="panel rules-panel">
+                    <h2>Rules of the Game</h2>
+                    <ul class="rules-list">
+                        <li>Any live cell with fewer than two live neighbours dies (underpopulation).</li>
+                        <li>Any live cell with two or three live neighbours lives on.</li>
+                        <li>Any live cell with more than three live neighbours dies (overpopulation).</li>
+                        <li>Any dead cell with exactly three live neighbours becomes alive (reproduction).</li>
+                    </ul>
+                </article>
+
                 <article class="panel links-panel">
                     <a href="https://github.com/lwalden/life/" target="_blank" rel="noopener" class="btn btn-outline">
                         GitHub Repository
@@ -69,7 +85,6 @@
         </main>
     </div>
 
-    <!-- About Modal (Native HTML dialog) -->
     <dialog id="about-modal" class="modal">
         <article class="modal-content">
             <header class="modal-header">
@@ -80,7 +95,7 @@
                 <p>Written by Laurance Walden using HTML Canvas and JavaScript.</p>
                 <p>View more work on the <a href="https://lwalden.github.io" target="_blank" rel="noopener">Portfolio Page</a>.</p>
                 <p>Read more about <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life" target="_blank" rel="noopener">Conway's Game of Life</a> on Wikipedia.</p>
-                <p>The board contains 6,400 cells. Cells on the edge wrap around to the opposite side (toroidal grid), allowing gliders and similar patterns to traverse the entire board continuously.</p>
+                <p>The simulation tracks <span id="board-cell-count">57,600</span> cells on a <span id="board-dimensions">240 x 240</span> world grid, while rendering a focused viewport for interaction.</p>
             </div>
             <footer class="modal-footer">
                 <button id="btn-modal-close" class="btn btn-secondary">Close</button>
