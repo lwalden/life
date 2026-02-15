@@ -92,7 +92,10 @@ export class GameController {
         this.elements.canvas.addEventListener('pointercancel', (e) => this.handleCanvasPointerCancel(e));
 
         this.elements.btnPlay.addEventListener('click', () => this.togglePlay());
-        this.elements.btnStep.addEventListener('click', () => this.step());
+        this.elements.btnStep.addEventListener('click', () => {
+            if (this.elements.btnStep.disabled) return;
+            this.step();
+        });
 
         this.elements.btnPatternLife.addEventListener('click', () => this.loadPattern('life'));
         this.elements.btnPatternGlider.addEventListener('click', () => this.loadPattern('gosperGliderGun'));
@@ -533,7 +536,9 @@ export class GameController {
                 this.togglePlay();
                 break;
             case 's':
-                this.step();
+                if (!this.elements.btnStep.disabled) {
+                    this.step();
+                }
                 break;
             case 'c':
                 this.clearGrid();
@@ -634,17 +639,28 @@ export class GameController {
         this.updateBoardMetadata();
     }
 
+    applyPlayStateClasses(button, playing) {
+        if (!button) return;
+
+        if (playing) {
+            button.classList.remove('btn-success');
+            button.classList.add('btn-playing');
+        } else {
+            button.classList.remove('btn-playing');
+            button.classList.add('btn-success');
+        }
+    }
+
     updatePlayButton(playing) {
         const btn = this.elements.btnPlay;
         if (playing) {
-            btn.textContent = 'Stop';
-            btn.classList.remove('btn-success');
-            btn.classList.add('btn-playing');
+            btn.innerHTML = 'Stop <span class="btn-icon btn-icon-stop" aria-hidden="true"></span>';
         } else {
-            btn.textContent = 'Play';
-            btn.classList.remove('btn-playing');
-            btn.classList.add('btn-success');
+            btn.innerHTML = 'Play <span class="btn-icon btn-icon-play" aria-hidden="true"></span>';
         }
+
+        this.applyPlayStateClasses(this.elements.btnPlay, playing);
+        this.applyPlayStateClasses(this.elements.btnStep, playing);
     }
 
     disableControls(disabled) {
