@@ -9,11 +9,13 @@
 <body>
     <div class="app-container">
         <header class="app-header">
+            <button id="btn-mobile-menu" class="mobile-menu-toggle" aria-label="Open menu" aria-controls="mobile-side-panel" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
             <p class="eyebrow">Cellular Automata Simulation</p>
             <h1>Conway's Game of Life</h1>
-            <div class="game-stats" aria-live="polite">
-                <span class="cycle-counter">Cycle: <span id="cycle-count">0</span></span>
-            </div>
         </header>
 
         <main class="game-layout">
@@ -32,18 +34,11 @@
                         <canvas id="minimap-canvas" width="140" height="140" aria-label="World minimap"></canvas>
                     </div>
                 </div>
-                <p class="canvas-hint">Drag to pan, pinch to zoom, tap cells to toggle. Drag on minimap to jump viewport.</p>
             </section>
 
             <aside class="controls-section">
                 <article class="panel controls-panel">
                     <h2>Controls</h2>
-                    <div class="control-group">
-                        <label for="batch-cycles" class="visually-hidden">Number of cycles</label>
-                        <input type="number" id="batch-cycles" placeholder="Cycles to run" min="1" max="10000">
-                        <button id="btn-run-cycles" class="btn btn-primary">Run Cycles</button>
-                    </div>
-
                     <div class="button-group">
                         <button id="btn-play" class="btn btn-success">Play</button>
                         <button id="btn-step" class="btn btn-secondary">Step</button>
@@ -53,16 +48,25 @@
                         <button id="btn-pattern-life" class="btn btn-accent">LIFE Pattern</button>
                         <button id="btn-pattern-glider" class="btn btn-accent">Glider Gun</button>
                     </div>
+                    
+                    <div class="control-group">
+                        <button id="btn-clear" class="btn btn-danger btn-full">Clear Grid</button>
+                        <label for="batch-cycles" class="visually-hidden">Number of cycles</label>
+                        <input type="number" id="batch-cycles" placeholder="Cycles to run" min="1" max="10000">
+                        <button id="btn-run-cycles" class="btn btn-primary">Run Cycles</button>
+                    </div>
 
+                    
                     <div class="view-controls">
                         <label for="zoom-level">Viewport Zoom</label>
                         <div class="range-row">
-                            <input type="range" id="zoom-level" min="50" max="100" step="5" value="100">
+                            <input type="range" id="zoom-level" min="37.5" max="100" step="2.5" value="100">
                             <span id="zoom-level-value">100%</span>
                         </div>
                     </div>
-
-                    <button id="btn-clear" class="btn btn-danger btn-full">Clear Grid</button>
+                    <div class="game-stats" aria-live="polite">
+                        <span class="cycle-counter">Cycle: <span id="cycle-count">0</span></span>
+                    </div>
                 </article>
 
                 <article class="panel rules-panel">
@@ -83,6 +87,33 @@
                 </article>
             </aside>
         </main>
+
+        <aside id="mobile-side-panel" class="mobile-side-panel" aria-hidden="true" inert>
+            <div class="mobile-side-backdrop" id="mobile-side-backdrop"></div>
+            <div class="mobile-side-drawer">
+                <header class="mobile-side-header">
+                    <h2>Menu</h2>
+                    <button id="btn-mobile-menu-close" class="btn-close" aria-label="Close menu">&times;</button>
+                </header>
+
+                <div class="mobile-side-links">
+                    <a href="https://github.com/lwalden/life/" target="_blank" rel="noopener" class="btn btn-outline">
+                        GitHub Repository
+                    </a>
+                    <button id="btn-about-mobile" class="btn btn-outline">About</button>
+                </div>
+
+                <section class="mobile-side-rules">
+                    <h2>Rules of the Game</h2>
+                    <ul class="rules-list">
+                        <li>Any live cell with fewer than two live neighbours dies (underpopulation).</li>
+                        <li>Any live cell with two or three live neighbours lives on.</li>
+                        <li>Any live cell with more than three live neighbours dies (overpopulation).</li>
+                        <li>Any dead cell with exactly three live neighbours becomes alive (reproduction).</li>
+                    </ul>
+                </section>
+            </div>
+        </aside>
     </div>
 
     <dialog id="about-modal" class="modal">
