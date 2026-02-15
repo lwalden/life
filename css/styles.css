@@ -248,6 +248,52 @@ body {
     color: var(--color-text);
 }
 
+.panel-toggle-wrap {
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.panel-toggle {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.panel-toggle:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.panel-toggle-icon {
+    min-width: 1.1rem;
+    text-align: center;
+    color: var(--color-text-muted);
+}
+
+.panel-collapsible.is-collapsed .panel-toggle-wrap {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.panel-collapsible.is-collapsed .panel-toggle-icon {
+    color: var(--color-primary);
+}
+
+.panel-collapsible.is-collapsed .panel-content {
+    display: none;
+}
+
 .rules-list {
     list-style: none;
 }
@@ -438,7 +484,7 @@ body {
     background: var(--color-danger-hover);
 }
 
-.links-panel {
+.links-panel .panel-content {
     display: grid;
     gap: var(--spacing-sm);
 }
@@ -601,36 +647,46 @@ body {
     }
 }
 
-@media (max-width: 900px), (hover: none) and (pointer: coarse) {
-    .eyebrow {
-        margin-top: 0.55rem;
-        font-size: 1.125rem;
-    }
+.touch-ui .eyebrow {
+    margin-top: 0.55rem;
+    font-size: 1.125rem;
+}
 
-    .app-header h1 {
-        font-size: 2.25rem;
-    }
+.touch-ui .app-header {
+    padding-left: 3.15rem;
+    padding-right: 0.65rem;
+}
 
-    .mobile-menu-toggle {
-        display: flex;
-    }
+.touch-ui .app-header h1 {
+    font-size: 2.25rem;
+}
 
-    .mobile-side-panel {
-        display: block;
-    }
+.touch-ui .mobile-menu-toggle {
+    display: flex;
+    left: 0.2rem;
+}
 
-    .minimap-overlay {
-        background: rgba(23, 27, 26, 0.08);
-    }
+.touch-ui .mobile-side-panel {
+    display: block;
+}
 
-    .rules-panel,
-    .links-panel {
-        display: none;
-    }
+.touch-ui .minimap-overlay {
+    background: rgba(23, 27, 26, 0.08);
+}
 
-    body.mobile-menu-open {
-        overflow: hidden;
-    }
+.touch-ui .rules-panel,
+.touch-ui .links-panel {
+    display: none;
+}
+
+body.touch-ui.mobile-menu-open {
+    overflow: hidden;
+}
+
+body.touch-ui.mobile-menu-open .mobile-menu-toggle {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 @media (min-width: 1024px) {
@@ -643,5 +699,7 @@ body {
     .controls-section {
         position: sticky;
         top: var(--spacing-lg);
+        align-self: start;
+        min-height: 0;
     }
 }

@@ -5,12 +5,46 @@ Conways Game of Life in Javascript
 
 This was originally a weekend project I did for my portfolio when I was in Code boot camp over a decade ago.
 
-To test Claude, v2.0.0 was written using Claude Code and the following prompt.
+I picked it up again recently to practive Agentic Coding with Claude Code and Codex.
 
-Agent: claude-opus-4-5-20251101 in VS Code using Claude Code Extention with all skills on.
 
-Prompt:
+Local development
+-----------------
 
-I've loaded up an old github project from when I was learning coding. This is a static webpage that generates a version of Conway's Game of Life in a browser. I want to re-create this project using only HTML, CSS, and modern javascript. It should still run as a static page. It should have no dependencies on any third party scripts. Can you create a plan of action, show it to me for review then implement it?
+Serve over HTTP (required for ES modules):
 
-Otherwise I only approved its choices. Not bad Claude.
+```powershell
+cd D:\Source\life\life
+.\serve-local.ps1
+```
+
+Optional custom port:
+
+```powershell
+.\serve-local.ps1 -Port 8080
+```
+
+Performance limits
+------------------
+
+`js/config.js` now separates practical and hard limits:
+
+- Recommended max (for smooth interaction on typical hardware):
+  - Canvas size: `1200`
+  - Visible grid size: `160`
+  - World size: `1000`
+- Theoretical max (upper bound allowed by runtime clamps):
+  - Canvas size: `2000`
+  - Visible grid size: `240`
+  - World size: `2000`
+
+Defaults are capped to recommended values when fallbacks are used.
+
+Minimap redraw throttling
+-------------------------
+
+Minimap redraw frequency can be throttled with:
+
+- `CONFIG.MINIMAP_REDRAW_THROTTLE_MS` in `js/config.js`
+
+Set to `0` (default) for immediate redraws, or a value like `16`/`33` to reduce redraw pressure during rapid pan/zoom interactions.
