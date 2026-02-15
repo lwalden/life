@@ -743,6 +743,7 @@ export class GameController {
     setBoardConfig(nextConfig, options = {}) {
         const preserveState = options.preserveState ?? false;
         const keepViewportCenter = options.keepViewportCenter ?? true;
+        const stopPlayback = options.stopPlayback ?? true;
 
         const previousGrid = this.grid;
         const previousBoardConfig = this.boardConfig;
@@ -771,7 +772,9 @@ export class GameController {
         const previousAliveCells = needsScaleForWorldResize ? previousGrid.getAliveCells() : null;
         const previousCycleCount = previousGrid.cycleCount;
 
-        this.stop();
+        if (stopPlayback) {
+            this.stop();
+        }
 
         this.boardConfig = mergedConfig;
         this.renderer.updateBoardConfig(this.boardConfig);
@@ -851,6 +854,7 @@ export class GameController {
         const resolvedOptions = {
             preserveState: true,
             keepViewportCenter: true,
+            stopPlayback: false,
             ...options
         };
 
