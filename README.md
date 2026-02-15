@@ -3,6 +3,11 @@ life
 
 Conways Game of Life in Javascript
 
+This was originally a weekend project I did for my portfolio when I was in Code boot camp over a decade ago.
+
+I picked it up again recently to practive Agentic Coding with Claude Code and Codex.
+
+
 Local development
 -----------------
 
