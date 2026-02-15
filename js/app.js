@@ -7,6 +7,7 @@ const CONFIG = Object.freeze({
     DEFAULT_CANVAS_SIZE: 800,
     DEFAULT_VISIBLE_GRID_SIZE: 80,
     DEFAULT_WORLD_SIZE: 240,
+    MOBILE_LAYOUT_MAX_WIDTH: 900,
     WORLD_SIZE_MULTIPLIER: 3,
     DEFAULT_ZOOM_LEVEL: 1,
     MIN_ZOOM_LEVEL: 0.375,
@@ -51,8 +52,25 @@ function isCoarsePointer() {
     return typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
 }
 
+function isHoverNone() {
+    return typeof window.matchMedia === 'function' && window.matchMedia('(hover: none)').matches;
+}
+
+function isNarrowViewport() {
+    const viewportWidth = document.documentElement.clientWidth || window.innerWidth || CONFIG.DEFAULT_CANVAS_SIZE;
+    return viewportWidth <= CONFIG.MOBILE_LAYOUT_MAX_WIDTH;
+}
+
+function isMobileUiContext() {
+    const hasTouchPoints = typeof navigator !== 'undefined' &&
+        Number.isFinite(navigator.maxTouchPoints) &&
+        navigator.maxTouchPoints > 0;
+
+    return isNarrowViewport() || isCoarsePointer() || isHoverNone() || (hasTouchPoints && isNarrowViewport());
+}
+
 function getBaseMinimumCellSizePx() {
-    const remSize = isCoarsePointer() ? CONFIG.TOUCH_MIN_CELL_REM : CONFIG.DESKTOP_MIN_CELL_REM;
+    const remSize = isMobileUiContext() ? CONFIG.TOUCH_MIN_CELL_REM : CONFIG.DESKTOP_MIN_CELL_REM;
     return remSize * getRootFontSizePx();
 }
 
@@ -259,7 +277,7 @@ function parseInitialBoardConfig(canvas) {
     const fittedCanvasSize = getInitialCanvasSize(canvas, configuredMaxCanvas);
 
     const configuredZoomLevel = Number.parseFloat(canvas.dataset.zoomLevel) / 100;
-    const initialZoomLevel = isCoarsePointer() ? 0.5 : configuredZoomLevel;
+    const initialZoomLevel = isMobileUiContext() ? 0.5 : configuredZoomLevel;
 
     return createBoardConfig({
         maxCanvasSize: configuredMaxCanvas,
@@ -778,7 +796,7 @@ class GameController {
 
         ctx.clearRect(0, 0, width, height);
         // Keep minimap readable while letting the simulation remain visible beneath it.
-        ctx.fillStyle = 'rgba(8, 12, 10, 0.14)';
+        ctx.fillStyle = 'rgba(8, 12, 10, 0.06)';
         ctx.fillRect(0, 0, width, height);
 
         ctx.fillStyle = this.renderer.colors.ALIVE;
@@ -800,7 +818,7 @@ class GameController {
         const viewportWidth = Math.max(1, Math.ceil(this.boardConfig.visibleGridSize * scaleX));
         const viewportHeight = Math.max(1, Math.ceil(this.boardConfig.visibleGridSize * scaleY));
 
-        ctx.fillStyle = 'rgba(143, 211, 170, 0.1)';
+        ctx.fillStyle = 'rgba(143, 211, 170, 0.12)';
         ctx.fillRect(viewportX, viewportY, viewportWidth, viewportHeight);
 
         ctx.strokeStyle = '#8fd3aa';
@@ -1074,7 +1092,7 @@ class GameController {
             );
         }, 120);
 
-        if (window.innerWidth > 767 && this.mobileMenuOpen) {
+        if (!isMobileUiContext() && this.mobileMenuOpen) {
             this.closeMobileMenu();
         }
     }
