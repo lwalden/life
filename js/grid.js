@@ -3,11 +3,17 @@ export class Grid {
         this.size = size;
         this.aliveCells = new Set();
         this.cycleCount = 0;
+        this.transitionHistory = [];
+    }
+
+    clearHistory() {
+        this.transitionHistory.length = 0;
     }
 
     clear() {
         this.aliveCells.clear();
         this.cycleCount = 0;
+        this.clearHistory();
     }
 
     getCellIndex(x, y) {
@@ -37,9 +43,10 @@ export class Grid {
 
     loadCells(cells) {
         this.aliveCells.clear();
+        this.clearHistory();
 
         for (const [x, y] of cells) {
-            this.setCell(x, y, true);
+            this.setCell(x, y, true, { clearHistory: false });
         }
     }
 
@@ -49,21 +56,29 @@ export class Grid {
 
         if (this.aliveCells.has(cellIndex)) {
             this.aliveCells.delete(cellIndex);
+            this.clearHistory();
             return;
         }
 
         this.aliveCells.add(cellIndex);
+        this.clearHistory();
     }
 
-    setCell(x, y, alive) {
+    setCell(x, y, alive, options = {}) {
+        const clearHistory = options.clearHistory ?? true;
         if (!this.isValidPosition(x, y)) return;
         const cellIndex = this.getCellIndex(x, y);
+        const isAlive = this.aliveCells.has(cellIndex);
+        if (isAlive === alive) return;
+
         if (alive) {
             this.aliveCells.add(cellIndex);
+            if (clearHistory) this.clearHistory();
             return;
         }
 
         this.aliveCells.delete(cellIndex);
+        if (clearHistory) this.clearHistory();
     }
 
     getCell(x, y) {
@@ -78,6 +93,8 @@ export class Grid {
     nextGenerationWithTransitions() {
         const neighborCounts = new Map();
         const dyingCells = [];
+        const bornCellIndexes = [];
+        const diedCellIndexes = [];
 
         for (const cellIndex of this.aliveCells) {
             const { x, y } = this.getCoordinatesFromIndex(cellIndex);
@@ -109,12 +126,22 @@ export class Grid {
 
         for (const cellIndex of this.aliveCells) {
             if (nextAliveCells.has(cellIndex)) continue;
+            diedCellIndexes.push(cellIndex);
             const { x, y } = this.getCoordinatesFromIndex(cellIndex);
             dyingCells.push([x, y]);
         }
 
+        for (const cellIndex of nextAliveCells) {
+            if (this.aliveCells.has(cellIndex)) continue;
+            bornCellIndexes.push(cellIndex);
+        }
+
         this.aliveCells = nextAliveCells;
         this.cycleCount++;
+        this.transitionHistory.push({
+            bornCellIndexes,
+            diedCellIndexes
+        });
 
         return {
             cycleCount: this.cycleCount,
@@ -122,10 +149,40 @@ export class Grid {
         };
     }
 
+    canStepBack() {
+        return this.cycleCount > 0 && this.transitionHistory.length > 0;
+    }
+
+    stepBack() {
+        if (!this.canStepBack()) {
+            return {
+                cycleCount: this.cycleCount,
+                didStepBack: false
+            };
+        }
+
+        const transition = this.transitionHistory.pop();
+
+        for (const cellIndex of transition.bornCellIndexes) {
+            this.aliveCells.delete(cellIndex);
+        }
+
+        for (const cellIndex of transition.diedCellIndexes) {
+            this.aliveCells.add(cellIndex);
+        }
+
+        this.cycleCount = Math.max(0, this.cycleCount - 1);
+
+        return {
+            cycleCount: this.cycleCount,
+            didStepBack: true
+        };
+    }
+
     loadPattern(pattern) {
         this.clear();
         for (const [x, y] of pattern) {
-            this.setCell(x, y, true);
+            this.setCell(x, y, true, { clearHistory: false });
         }
     }
 }

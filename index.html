@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Conway's Game of Life</title>
-    <link rel="stylesheet" href="css/styles.css?v=20260215i">
+    <link rel="stylesheet" href="css/styles.css?v=20260215k">
 </head>
 <body>
     <div class="app-container">
@@ -46,9 +46,16 @@
                             <span id="zoom-level-value">100%</span>
                         </div>
                     </div>
-                    <div class="button-group">
-                        <button id="btn-play" class="btn btn-success">Play <span class="btn-icon btn-icon-play" aria-hidden="true"></span></button>
-                        <button id="btn-step" class="btn btn-success">Step <span class="btn-icon btn-icon-step" aria-hidden="true"></span></button>
+                    <div class="button-group transport-controls">
+                        <button id="btn-step-back" class="btn btn-success" aria-label="Step Back">
+                            <span class="btn-icon btn-icon-step-back" aria-hidden="true"></span>
+                        </button>
+                        <button id="btn-play" class="btn btn-success" aria-label="Play">
+                            <span class="btn-icon btn-icon-play" aria-hidden="true"></span>
+                        </button>
+                        <button id="btn-step" class="btn btn-success" aria-label="Step">
+                            <span class="btn-icon btn-icon-step" aria-hidden="true"></span>
+                        </button>
                     </div>
 
                     <div class="button-group">
@@ -134,6 +141,6 @@
         </article>
     </dialog>
 
-    <script type="module" src="js/app.js?v=20260215j"></script>
+    <script type="module" src="js/app.js?v=20260215l"></script>
 </body>
 </html>
